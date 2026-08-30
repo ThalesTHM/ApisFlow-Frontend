@@ -44,8 +44,8 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   return <div className="error-state" role="alert"><strong>Algo deu errado</strong><p>{message}</p>{onRetry && <Button variant="secondary" onClick={onRetry}>Tentar novamente</Button>}</div>
 }
 
-export function Badge({ value }: { value: string }) {
-  return <span className={`badge badge--${value.toLowerCase()}`}>{value.replaceAll('_', ' ')}</span>
+export function Badge({ value, label }: { value: string; label?: string }) {
+  return <span className={`badge badge--${value.toLowerCase()}`}>{label ?? value.replaceAll('_', ' ')}</span>
 }
 
 export function Dialog({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {

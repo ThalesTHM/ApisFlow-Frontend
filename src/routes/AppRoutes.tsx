@@ -7,6 +7,7 @@ import { PermissionRoute } from './PermissionRoute'
 import { RoutePlaceholder } from './RoutePlaceholder'
 import { ForbiddenPage } from './ForbiddenPage'
 import { ApiaryCreatePage, ApiaryDetailPage, ApiaryEditPage, ApiaryListPage } from '../features/apiaries/ApiaryPages'
+import { HiveCreatePage, HiveDetailPage, HiveEditPage, HiveListPage } from '../features/hives/HivePages'
 
 function ProtectedLayout() { return <AppShell><Outlet /></AppShell> }
 
@@ -26,7 +27,12 @@ export function AppRoutes() {
               <Route path="/apiaries/new" element={<ApiaryCreatePage />} />
               <Route path="/apiaries/:id/edit" element={<ApiaryEditPage />} />
             </Route>
-            <Route path="/hives" element={<RoutePlaceholder title="Colmeias" />} />
+            <Route path="/hives" element={<HiveListPage />} />
+            <Route path="/hives/:id" element={<HiveDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}>
+              <Route path="/hives/new" element={<HiveCreatePage />} />
+              <Route path="/hives/:id/edit" element={<HiveEditPage />} />
+            </Route>
             <Route path="/production-cycles" element={<RoutePlaceholder title="Ciclos de produção" />} />
             <Route path="/honey-batches" element={<RoutePlaceholder title="Lotes de mel" />} />
             <Route path="/orders" element={<RoutePlaceholder title="Pedidos" />} />
