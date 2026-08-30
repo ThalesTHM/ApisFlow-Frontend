@@ -2,12 +2,13 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { LoginPage, RegisterPage } from '../auth/AuthPage'
 import { AppShell } from '../components/AppShell'
+import { ApiaryCreatePage, ApiaryDetailPage, ApiaryEditPage, ApiaryListPage } from '../features/apiaries/ApiaryPages'
+import { HiveCreatePage, HiveDetailPage, HiveEditPage, HiveListPage } from '../features/hives/HivePages'
+import { ProductionCycleCreatePage, ProductionCycleDetailPage, ProductionCycleEditPage, ProductionCycleListPage } from '../features/production-cycles/ProductionCyclePages.tsx'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PermissionRoute } from './PermissionRoute'
 import { RoutePlaceholder } from './RoutePlaceholder'
 import { ForbiddenPage } from './ForbiddenPage'
-import { ApiaryCreatePage, ApiaryDetailPage, ApiaryEditPage, ApiaryListPage } from '../features/apiaries/ApiaryPages'
-import { HiveCreatePage, HiveDetailPage, HiveEditPage, HiveListPage } from '../features/hives/HivePages'
 
 function ProtectedLayout() { return <AppShell><Outlet /></AppShell> }
 
@@ -33,7 +34,12 @@ export function AppRoutes() {
               <Route path="/hives/new" element={<HiveCreatePage />} />
               <Route path="/hives/:id/edit" element={<HiveEditPage />} />
             </Route>
-            <Route path="/production-cycles" element={<RoutePlaceholder title="Ciclos de produção" />} />
+            <Route path="/production-cycles" element={<ProductionCycleListPage />} />
+            <Route path="/production-cycles/:id" element={<ProductionCycleDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}>
+              <Route path="/production-cycles/new" element={<ProductionCycleCreatePage />} />
+              <Route path="/production-cycles/:id/edit" element={<ProductionCycleEditPage />} />
+            </Route>
             <Route path="/honey-batches" element={<RoutePlaceholder title="Lotes de mel" />} />
             <Route path="/orders" element={<RoutePlaceholder title="Pedidos" />} />
           </Route>
