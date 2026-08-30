@@ -1,5 +1,5 @@
 import { LoaderCircle, X } from 'lucide-react'
-import { forwardRef, useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { forwardRef, useId, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 export function Button({ className = '', variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' }) {
   return <button className={`button button--${variant} ${className}`} {...props} />
@@ -9,6 +9,12 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
   const generatedId = useId()
   const inputId = id ?? generatedId
   return <div className="field"><label htmlFor={inputId}>{label}</label><input ref={ref} id={inputId} {...props} aria-invalid={Boolean(error)} aria-describedby={error ? `${inputId}-error` : undefined} />{error && <small id={`${inputId}-error`} role="alert">{error}</small>}</div>
+})
+
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string }>(function Textarea({ label, error, id, ...props }, ref) {
+  const generatedId = useId()
+  const textareaId = id ?? generatedId
+  return <div className="field field--wide"><label htmlFor={textareaId}>{label}</label><textarea ref={ref} id={textareaId} {...props} aria-invalid={Boolean(error)} aria-describedby={error ? `${textareaId}-error` : undefined} />{error && <small id={`${textareaId}-error`} role="alert">{error}</small>}</div>
 })
 
 export interface SelectOption { value: string; label: string }

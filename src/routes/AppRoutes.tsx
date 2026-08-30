@@ -6,6 +6,7 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { PermissionRoute } from './PermissionRoute'
 import { RoutePlaceholder } from './RoutePlaceholder'
 import { ForbiddenPage } from './ForbiddenPage'
+import { ApiaryCreatePage, ApiaryDetailPage, ApiaryEditPage, ApiaryListPage } from '../features/apiaries/ApiaryPages'
 
 function ProtectedLayout() { return <AppShell><Outlet /></AppShell> }
 
@@ -19,7 +20,12 @@ export function AppRoutes() {
         <Route element={<ProtectedLayout />}>
           <Route element={<PermissionRoute permission="dashboard:read" />}><Route path="/" element={<RoutePlaceholder title="Dashboard" />} /></Route>
           <Route element={<PermissionRoute permission="operations:read" />}>
-            <Route path="/apiaries" element={<RoutePlaceholder title="Apiários" />} />
+            <Route path="/apiaries" element={<ApiaryListPage />} />
+            <Route path="/apiaries/:id" element={<ApiaryDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}>
+              <Route path="/apiaries/new" element={<ApiaryCreatePage />} />
+              <Route path="/apiaries/:id/edit" element={<ApiaryEditPage />} />
+            </Route>
             <Route path="/hives" element={<RoutePlaceholder title="Colmeias" />} />
             <Route path="/production-cycles" element={<RoutePlaceholder title="Ciclos de produção" />} />
             <Route path="/honey-batches" element={<RoutePlaceholder title="Lotes de mel" />} />
