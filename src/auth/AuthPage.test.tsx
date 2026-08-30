@@ -34,7 +34,7 @@ describe('authentication flow', () => {
     await user.type(screen.getByLabelText('Senha'), 'password123')
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
 
-    expect(await screen.findByRole('heading', { name: 'Visão geral' })).toBeVisible()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeVisible()
     expect(JSON.parse(localStorage.getItem(SESSION_KEY) ?? '{}')).toEqual(session)
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/api/v1/auth/login', expect.objectContaining({
       method: 'POST',
@@ -62,7 +62,7 @@ describe('authentication flow', () => {
     const user = userEvent.setup()
     renderApp('/')
 
-    expect(await screen.findByRole('heading', { name: 'Visão geral' })).toBeVisible()
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Sair' }))
 
     expect(await screen.findByRole('heading', { name: 'Bem-vindo de volta' })).toBeVisible()
@@ -82,7 +82,7 @@ describe('authentication flow', () => {
     renderApp('/')
 
     expect(screen.getByText('Validando sessão')).toBeVisible()
-    expect(screen.queryByRole('heading', { name: 'Visão geral' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Dashboard' })).not.toBeInTheDocument()
 
     await act(async () => resolveRequest(jsonResponse({ statusCode: 401, error: 'Unauthorized', message: 'Unauthorized', path: '/auth/me', timestamp: '2026-08-30T10:00:00.000Z' }, 401)))
     expect(await screen.findByRole('heading', { name: 'Bem-vindo de volta' })).toBeVisible()
