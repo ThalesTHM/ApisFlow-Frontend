@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
-import { AuthPage } from '../auth/AuthPage'
+import { LoginPage, RegisterPage } from '../auth/AuthPage'
 import { AppShell } from '../components/AppShell'
 import { ProtectedRoute } from './ProtectedRoute'
 import { RoutePlaceholder } from './RoutePlaceholder'
@@ -8,10 +8,11 @@ import { RoutePlaceholder } from './RoutePlaceholder'
 function ProtectedLayout() { return <AppShell><Outlet /></AppShell> }
 
 export function AppRoutes() {
-  const { session } = useAuth()
+  const { status } = useAuth()
   return (
     <Routes>
-      <Route path="/login" element={session ? <Navigate to="/" replace /> : <AuthPage />} />
+      <Route path="/login" element={status === 'loading' ? <main className="page"><p>Validando sessão…</p></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/register" element={status === 'loading' ? <main className="page"><p>Validando sessão…</p></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<RoutePlaceholder title="Visão geral" />} />
@@ -23,7 +24,7 @@ export function AppRoutes() {
           <Route path="/users" element={<RoutePlaceholder title="Usuários" />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />
+      <Route path="*" element={<Navigate to={status === 'authenticated' ? '/' : '/login'} replace />} />
     </Routes>
   )
 }
