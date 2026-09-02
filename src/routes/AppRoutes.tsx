@@ -3,6 +3,7 @@ import { useAuth } from '../auth/useAuth'
 import { LoginPage, RegisterPage } from '../auth/AuthPage'
 import { AppShell } from '../components/AppShell'
 import { ApiaryCreatePage, ApiaryDetailPage, ApiaryEditPage, ApiaryListPage } from '../features/apiaries/ApiaryPages'
+import { DashboardPage } from '../features/dashboard/DashboardPage.tsx'
 import { HoneyBatchCreatePage, HoneyBatchDetailPage, HoneyBatchEditPage, HoneyBatchListPage } from '../features/honey-batches/HoneyBatchPages.tsx'
 import { HiveCreatePage, HiveDetailPage, HiveEditPage, HiveListPage } from '../features/hives/HivePages'
 import { OrderCreatePage, OrderDetailPage, OrderListPage } from '../features/orders/OrderPages.tsx'
@@ -22,7 +23,7 @@ export function AppRoutes() {
       <Route path="/register" element={status === 'loading' ? <main className="page"><p>Validando sessão…</p></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<ProtectedLayout />}>
-          <Route element={<PermissionRoute permission="dashboard:read" />}><Route path="/" element={<RoutePlaceholder title="Dashboard" />} /></Route>
+          <Route element={<PermissionRoute permission="dashboard:read" />}><Route path="/" element={<DashboardPage />} /></Route>
           <Route element={<PermissionRoute permission="operations:read" />}>
             <Route path="/apiaries" element={<ApiaryListPage />} />
             <Route path="/apiaries/:id" element={<ApiaryDetailPage />} />

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -14,7 +15,8 @@ const session: AuthResponse = {
 }
 
 function renderApp(path = '/login') {
-  return render(<MemoryRouter initialEntries={[path]}><AuthProvider><AppRoutes /></AuthProvider></MemoryRouter>)
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[path]}><AuthProvider><AppRoutes /></AuthProvider></MemoryRouter></QueryClientProvider>)
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -25,7 +27,7 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('authentication flow', () => {
   it('logs in successfully and persists the documented session', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse(session))
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation((input) => Promise.resolve(jsonResponse(String(input).endsWith('/auth/login') ? session : [])))
     const user = userEvent.setup()
     renderApp()
 
@@ -58,7 +60,7 @@ describe('authentication flow', () => {
 
   it('logs out and clears the persisted session', async () => {
     localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse(session.user))
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => Promise.resolve(jsonResponse(String(input).endsWith('/auth/me') ? session.user : [])))
     const user = userEvent.setup()
     renderApp('/')
 
