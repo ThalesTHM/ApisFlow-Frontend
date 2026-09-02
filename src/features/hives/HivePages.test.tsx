@@ -84,7 +84,7 @@ describe('Hive management', () => {
     expect(await screen.findByText('Colmeia atualizada com sucesso.')).toBeVisible()
   })
 
-  it('surfaces tenant-wide duplicate code conflicts', async () => {
+  it('surfaces tenant-wide duplicate code conflicts safely', async () => {
     const user = userEvent.setup()
     renderApp('/hives/new', 'ADMIN', async (url) => {
       if (url.endsWith('/apiaries')) return json([apiary])
@@ -94,7 +94,8 @@ describe('Hive management', () => {
     await user.type(screen.getByLabelText('Código'), hive.code)
     await user.type(screen.getByLabelText('Data de instalação'), '2026-08-30')
     await user.click(screen.getByRole('button', { name: 'Salvar colmeia' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Hive code is already in use in this tenant')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível concluir porque os dados entram em conflito com o estado atual.')
+    expect(screen.queryByText('Hive code is already in use in this tenant')).not.toBeInTheDocument()
   })
 
   it('deletes only after confirmation and refreshes the filtered lists', async () => {

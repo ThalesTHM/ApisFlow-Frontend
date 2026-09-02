@@ -13,11 +13,11 @@ const loginSchema = z.object({ tenantSlug: tenantSlugSchema, email: emailSchema,
 const registerSchema = z.object({ tenantName: z.string().min(2, 'Use pelo menos 2 caracteres.').max(100), tenantSlug: tenantSlugSchema, name: z.string().min(2, 'Use pelo menos 2 caracteres.').max(100), email: emailSchema, password: passwordSchema })
 
 function LoginForm() {
-  const { login } = useAuth()
+  const { login, notice } = useAuth()
   const [apiError, setApiError] = useState('')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginRequest>({ resolver: zodResolver(loginSchema) })
   const submit = handleSubmit(async (values) => { try { setApiError(''); await login(values) } catch (error) { setApiError(error instanceof Error ? error.message : 'Não foi possível entrar.') } })
-  return <form onSubmit={submit} noValidate><Input label="Organização" placeholder="minha-cooperativa" autoComplete="organization" error={errors.tenantSlug?.message} {...register('tenantSlug')} /><Input label="E-mail" type="email" placeholder="voce@cooperativa.com" autoComplete="email" error={errors.email?.message} {...register('email')} /><Input label="Senha" type="password" autoComplete="current-password" error={errors.password?.message} {...register('password')} />{apiError && <p className="form-error" role="alert">{apiError}</p>}<Button type="submit" disabled={isSubmitting}>{isSubmitting && <LoaderCircle className="spin" size={17} />} Entrar</Button></form>
+  return <form onSubmit={submit} noValidate><Input label="Organização" placeholder="minha-cooperativa" autoComplete="organization" error={errors.tenantSlug?.message} {...register('tenantSlug')} /><Input label="E-mail" type="email" placeholder="voce@cooperativa.com" autoComplete="email" error={errors.email?.message} {...register('email')} /><Input label="Senha" type="password" autoComplete="current-password" error={errors.password?.message} {...register('password')} />{(apiError || notice) && <p className="form-error" role="alert">{apiError || notice}</p>}<Button type="submit" disabled={isSubmitting}>{isSubmitting && <LoaderCircle className="spin" size={17} />} Entrar</Button></form>
 }
 
 function RegisterForm() {

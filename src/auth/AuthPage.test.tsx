@@ -44,7 +44,7 @@ describe('authentication flow', () => {
     }))
   })
 
-  it('shows the backend message for an invalid login', async () => {
+  it('shows a safe session message for an invalid login', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ statusCode: 401, error: 'Unauthorized', message: 'Invalid credentials', path: '/auth/login', timestamp: '2026-08-30T10:00:00.000Z' }, 401))
     const user = userEvent.setup()
     renderApp()
@@ -54,7 +54,7 @@ describe('authentication flow', () => {
     await user.type(screen.getByLabelText('Senha'), 'incorrect')
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
 
-    expect(await screen.findByText('Invalid credentials')).toBeVisible()
+    expect(await screen.findByText('Sua sessão expirou. Entre novamente.')).toBeVisible()
     expect(localStorage.getItem(SESSION_KEY)).toBeNull()
   })
 
@@ -88,6 +88,7 @@ describe('authentication flow', () => {
 
     await act(async () => resolveRequest(jsonResponse({ statusCode: 401, error: 'Unauthorized', message: 'Unauthorized', path: '/auth/me', timestamp: '2026-08-30T10:00:00.000Z' }, 401)))
     expect(await screen.findByRole('heading', { name: 'Bem-vindo de volta' })).toBeVisible()
+    expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')
     expect(localStorage.getItem(SESSION_KEY)).toBeNull()
   })
 

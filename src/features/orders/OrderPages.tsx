@@ -8,7 +8,7 @@ import type { CreateOrderRequest, Order } from '../../api/types'
 import { PermissionGuard } from '../../auth/PermissionGuard'
 import { ContentCard, DetailPage, TablePage } from '../../components/PageLayouts'
 import { notify } from '../../components/notifications'
-import { Badge, Button, Dialog, EmptyState, ErrorState, Spinner, Table } from '../../components/ui'
+import { Badge, Button, Dialog, EmptyState, ErrorState, Spinner, Table, TableSkeleton } from '../../components/ui'
 import { formatCurrency, formatDate, formatKilograms, formatStatus } from '../../utils/format'
 import { OrderForm } from './OrderForm'
 import { allowedOrderTransitions } from './order-schema'
@@ -23,7 +23,7 @@ function StatusDialog({ order, status, onClose }: { order: Order; status: 'CONFI
   const queryClient = useQueryClient()
   const copy = transitionCopy[status]
   const mutation = useMutation({ mutationFn: () => ordersApi.updateStatus(order.id, status), onSuccess: async (saved) => { queryClient.setQueryData(orderKeys.detail(saved.id), saved); await Promise.all([queryClient.invalidateQueries({ queryKey: orderKeys.lists }), queryClient.invalidateQueries({ queryKey: honeyBatchKeys.all })]); notify.success(status === 'CONFIRMED' ? 'Pedido confirmado com sucesso.' : 'Pedido cancelado com sucesso.'); onClose() } })
-  return <Dialog title={copy.title} onClose={onClose}><p className="dialog-copy">{copy.description}</p>{mutation.error && <p className="form-error form-pad" role="alert">{mutation.error instanceof Error ? mutation.error.message : 'Não foi possível alterar o pedido.'}</p>}<footer className="form-actions"><Button variant="secondary" onClick={onClose}>Voltar</Button><Button variant={status === 'CANCELLED' ? 'danger' : 'primary'} disabled={mutation.isPending} onClick={() => mutation.mutate()}>{mutation.isPending ? 'Processando…' : copy.action}</Button></footer></Dialog>
+  return <Dialog title={copy.title} onClose={onClose} dismissible={!mutation.isPending}><p className="dialog-copy">{copy.description}</p>{mutation.error && <p className="form-error form-pad" role="alert">{mutation.error instanceof Error ? mutation.error.message : 'Não foi possível alterar o pedido.'}</p>}<footer className="form-actions"><Button variant="secondary" disabled={mutation.isPending} onClick={onClose}>Voltar</Button><Button variant={status === 'CANCELLED' ? 'danger' : 'primary'} disabled={mutation.isPending} onClick={() => mutation.mutate()}>{mutation.isPending ? 'Processando…' : copy.action}</Button></footer></Dialog>
 }
 
 export function OrderListPage() {
@@ -36,7 +36,7 @@ export function OrderListPage() {
     { key: 'status', header: 'Situação', render: (order: Order) => <Badge value={order.status} label={formatStatus(order.status)} /> },
     { key: 'actions', header: <span className="sr-only">Ações</span>, render: (order: Order) => <div className="row-actions"><Link className="icon-button" to={`/orders/${order.id}`} aria-label={`Ver pedido de ${order.customerName}`} title="Ver detalhes"><Eye size={17} /></Link></div> },
   ]
-  return <TablePage title="Pedidos" description="Acompanhe vendas, valores e situações dos pedidos." actions={<PermissionGuard permission="operations:write"><Link className="button button--primary button-link" to="/orders/new"><Plus size={17} /> Novo pedido</Link></PermissionGuard>}>{orders.isPending ? <Spinner label="Carregando pedidos" /> : orders.isError ? <ErrorState error={orders.error} onRetry={() => orders.refetch()} /> : orders.data.length === 0 ? <EmptyState title="Nenhum pedido cadastrado" description="Crie o primeiro pedido de venda." /> : <Table caption="Pedidos" rows={orders.data} getRowKey={(order) => order.id} columns={columns} />}</TablePage>
+  return <TablePage title="Pedidos" description="Acompanhe vendas, valores e situações dos pedidos." actions={<PermissionGuard permission="operations:write"><Link className="button button--primary button-link" to="/orders/new"><Plus size={17} /> Novo pedido</Link></PermissionGuard>}>{orders.isPending ? <TableSkeleton label="Carregando pedidos" columns={6} /> : orders.isError ? <ErrorState error={orders.error} onRetry={() => orders.refetch()} /> : orders.data.length === 0 ? <EmptyState title="Nenhum pedido cadastrado" description="Crie o primeiro pedido de venda." /> : <Table caption="Pedidos" rows={orders.data} getRowKey={(order) => order.id} columns={columns} />}</TablePage>
 }
 
 function StatusActions({ order, onTransition }: { order: Order; onTransition: (status: 'CONFIRMED' | 'CANCELLED') => void }) {

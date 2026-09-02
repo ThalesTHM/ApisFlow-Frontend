@@ -83,16 +83,17 @@ describe('Production Cycle management', () => {
   })
 
   it.each([
-    [409, 'Hive already has an active production cycle'],
-    [400, 'Completed cycles require an end date and actual production'],
-  ])('presents backend %s business-rule responses', async (status, message) => {
+    [409, 'Hive already has an active production cycle', 'Não foi possível concluir porque os dados entram em conflito com o estado atual.'],
+    [400, 'Completed cycles require an end date and actual production', 'Não foi possível concluir. Revise os dados informados.'],
+  ])('presents safe messages for backend %s business-rule responses', async (status, message, expectedMessage) => {
     const user = userEvent.setup()
     renderApp('/production-cycles/new', 'ADMIN', async (url) => url.endsWith('/hives') ? json([hive]) : json({ statusCode: status, error: 'Request Error', message, path: '/production-cycles', timestamp: new Date().toISOString() }, status))
     await user.selectOptions(await screen.findByLabelText('Colmeia'), hive.id)
     await user.type(screen.getByLabelText('Data inicial'), '2026-09-01')
     await user.selectOptions(screen.getByLabelText('Situação'), status === 409 ? 'ACTIVE' : 'PLANNED')
     await user.click(screen.getByRole('button', { name: 'Salvar ciclo' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(await screen.findByRole('alert')).toHaveTextContent(expectedMessage)
+    expect(screen.queryByText(message)).not.toBeInTheDocument()
   })
 
   it('deletes after confirmation and prevents operator writes', async () => {

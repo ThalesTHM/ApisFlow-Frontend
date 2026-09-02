@@ -7,19 +7,19 @@ let onUnauthorized: (() => void) | undefined
 
 export class ApiError extends Error {
   constructor(public readonly status: number, public readonly details?: ApiErrorBody) {
-    const messages = details?.message
-    super(Array.isArray(messages) ? messages.join(' ') : messages || friendlyStatus(status))
+    super(friendlyStatus(status))
     this.name = 'ApiError'
   }
 }
 
 function friendlyStatus(status: number) {
   const messages: Record<number, string> = {
-    400: 'Revise os dados informados.',
+    0: 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.',
+    400: 'Não foi possível concluir. Revise os dados informados.',
     401: 'Sua sessão expirou. Entre novamente.',
     403: 'Você não tem permissão para esta ação.',
     404: 'O registro solicitado não foi encontrado.',
-    409: 'A operação conflita com os dados atuais.',
+    409: 'Não foi possível concluir porque os dados entram em conflito com o estado atual.',
   }
   return messages[status] ?? 'Não foi possível concluir a operação.'
 }

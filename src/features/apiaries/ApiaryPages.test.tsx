@@ -40,7 +40,8 @@ describe('Apiary management', () => {
     unmount()
 
     renderApp('/apiaries', 'ADMIN', async () => json({ statusCode: 500, error: 'Error', message: 'Falha ao consultar apiários', path: '/apiaries', timestamp: new Date().toISOString() }, 500))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao consultar apiários')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível concluir a operação.')
+    expect(screen.queryByText('Falha ao consultar apiários')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeVisible()
   })
 
@@ -106,13 +107,14 @@ describe('Apiary management', () => {
     expect(await screen.findByText('Apiário excluído com sucesso.')).toBeVisible()
   })
 
-  it('shows backend conflict details inside the form', async () => {
+  it('shows a safe conflict message inside the form', async () => {
     const user = userEvent.setup()
     renderApp('/apiaries/new', 'ADMIN', async () => json({ statusCode: 409, error: 'Conflict', message: 'Já existe um apiário com este nome.', path: '/apiaries', timestamp: new Date().toISOString() }, 409))
     await user.type(await screen.findByLabelText('Nome'), apiary.name)
     await user.type(screen.getByLabelText('Localização'), apiary.location)
     await user.click(screen.getByRole('button', { name: 'Salvar apiário' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Já existe um apiário com este nome.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível concluir porque os dados entram em conflito com o estado atual.')
+    expect(screen.queryByText('Já existe um apiário com este nome.')).not.toBeInTheDocument()
   })
 
   it('keeps operators read-only and denies direct write routes', async () => {

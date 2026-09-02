@@ -2,6 +2,7 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { LoginPage, RegisterPage } from '../auth/AuthPage'
 import { AppShell } from '../components/AppShell'
+import { Spinner } from '../components/ui'
 import { ApiaryCreatePage, ApiaryDetailPage, ApiaryEditPage, ApiaryListPage } from '../features/apiaries/ApiaryPages'
 import { DashboardPage } from '../features/dashboard/DashboardPage.tsx'
 import { HoneyBatchCreatePage, HoneyBatchDetailPage, HoneyBatchEditPage, HoneyBatchListPage } from '../features/honey-batches/HoneyBatchPages.tsx'
@@ -19,8 +20,8 @@ export function AppRoutes() {
   const { status } = useAuth()
   return (
     <Routes>
-      <Route path="/login" element={status === 'loading' ? <main className="page"><p>Validando sessão…</p></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/register" element={status === 'loading' ? <main className="page"><p>Validando sessão…</p></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <RegisterPage />} />
+      <Route path="/login" element={status === 'loading' ? <main className="page"><Spinner label="Validando sessão" /></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/register" element={status === 'loading' ? <main className="page"><Spinner label="Validando sessão" /></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<ProtectedLayout />}>
           <Route element={<PermissionRoute permission="dashboard:read" />}><Route path="/" element={<DashboardPage />} /></Route>

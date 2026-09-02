@@ -91,7 +91,8 @@ describe('Honey Batch management', () => {
     await user.type(screen.getByLabelText('Data de produção'), '2026-09-02')
     await user.type(screen.getByLabelText('Quantidade total (kg)'), '100.50')
     await user.click(screen.getByRole('button', { name: 'Salvar lote' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Batch code already exists for this tenant')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível concluir porque os dados entram em conflito com o estado atual.')
+    expect(screen.queryByText('Batch code already exists for this tenant')).not.toBeInTheDocument()
   })
 
   it('deletes after confirmation and prevents operator writes', async () => {

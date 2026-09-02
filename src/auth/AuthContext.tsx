@@ -13,6 +13,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initialSession] = useState(readSession)
   const [session, setSession] = useState<AuthResponse | null>(initialSession)
   const [status, setStatus] = useState<AuthContextValue['status']>(initialSession ? 'loading' : 'unauthenticated')
+  const [notice, setNotice] = useState('')
   const navigate = useNavigate()
 
   const clearSession = () => {
@@ -37,19 +38,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('authenticated')
   })
 
-  const failValidation = useEffectEvent(clearSession)
+  const failValidation = useEffectEvent((error: unknown) => {
+    setNotice(error instanceof Error ? error.message : 'Não foi possível validar sua sessão. Entre novamente.')
+    clearSession()
+  })
 
   useEffect(() => {
     if (!initialSession) return
     let active = true
     api.get<User>('/auth/me')
       .then((user) => { if (active) completeValidation(user) })
-      .catch(() => { if (active) failValidation() })
+      .catch((error) => { if (active) failValidation(error) })
     return () => { active = false }
   }, [initialSession])
 
   const authenticate = async (path: string, values: LoginRequest | RegisterRequest) => {
     const result = await api.post<AuthResponse>(path, values)
+    setNotice('')
     localStorage.setItem(SESSION_KEY, JSON.stringify(result))
     setSession(result)
     setStatus('authenticated')
@@ -60,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     session,
     status,
+    notice,
     login: (values) => authenticate('/auth/login', values),
     register: (values) => authenticate('/auth/register', values),
     logout: clearSession,

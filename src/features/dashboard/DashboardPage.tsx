@@ -17,7 +17,7 @@ import './dashboard.css'
 const sharedQueryOptions = { staleTime: 30_000 }
 
 function MetricCard({ label, value, pending, error, icon, to }: { label: string; value: string | number; pending: boolean; error: unknown; icon: React.ReactNode; to: string }) {
-  return <article className="dashboard-metric"><div className="dashboard-metric__icon">{icon}</div><div><span>{label}</span>{pending ? <small>Carregando…</small> : error ? <small className="dashboard-error">Indisponível</small> : <strong>{value}</strong>}</div><PermissionGuard permission="operations:read"><Link to={to} aria-label={`Ver ${label.toLowerCase()}`}>Ver dados</Link></PermissionGuard></article>
+  return <article className="dashboard-metric" aria-busy={pending}><div className="dashboard-metric__icon">{icon}</div><div><span>{label}</span>{pending ? <><i className="inline-skeleton" aria-hidden="true" /><small className="sr-only">Carregando</small></> : error ? <small className="dashboard-error">Indisponível</small> : <strong>{value}</strong>}</div><PermissionGuard permission="operations:read"><Link to={to} aria-label={`Ver ${label.toLowerCase()}`}>Ver dados</Link></PermissionGuard></article>
 }
 
 function SummaryPanel({ title, pending, error, children }: { title: string; pending: boolean; error: unknown; children: React.ReactNode }) {
