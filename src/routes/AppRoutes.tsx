@@ -3,6 +3,7 @@ import { useAuth } from '../auth/useAuth'
 import { LoginPage, RegisterPage } from '../auth/AuthPage'
 import { AppShell } from '../components/AppShell'
 import { ApiaryCreatePage, ApiaryDetailPage, ApiaryEditPage, ApiaryListPage } from '../features/apiaries/ApiaryPages'
+import { HoneyBatchCreatePage, HoneyBatchDetailPage, HoneyBatchEditPage, HoneyBatchListPage } from '../features/honey-batches/HoneyBatchPages.tsx'
 import { HiveCreatePage, HiveDetailPage, HiveEditPage, HiveListPage } from '../features/hives/HivePages'
 import { ProductionCycleCreatePage, ProductionCycleDetailPage, ProductionCycleEditPage, ProductionCycleListPage } from '../features/production-cycles/ProductionCyclePages.tsx'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -40,7 +41,12 @@ export function AppRoutes() {
               <Route path="/production-cycles/new" element={<ProductionCycleCreatePage />} />
               <Route path="/production-cycles/:id/edit" element={<ProductionCycleEditPage />} />
             </Route>
-            <Route path="/honey-batches" element={<RoutePlaceholder title="Lotes de mel" />} />
+            <Route path="/honey-batches" element={<HoneyBatchListPage />} />
+            <Route path="/honey-batches/:id" element={<HoneyBatchDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}>
+              <Route path="/honey-batches/new" element={<HoneyBatchCreatePage />} />
+              <Route path="/honey-batches/:id/edit" element={<HoneyBatchEditPage />} />
+            </Route>
             <Route path="/orders" element={<RoutePlaceholder title="Pedidos" />} />
           </Route>
           <Route element={<PermissionRoute permission="users:read" />}><Route path="/users" element={<RoutePlaceholder title="Usuários" />} /></Route>
