@@ -56,6 +56,10 @@ describe('Apiary management', () => {
       throw new Error(`Unexpected request: ${init?.method ?? 'GET'} ${url}`)
     })
     await screen.findByRole('heading', { name: 'Novo apiário' })
+    await user.click(screen.getByRole('button', { name: 'Salvar apiário' }))
+    expect(await screen.findAllByText('Use pelo menos 2 caracteres.')).toHaveLength(2)
+    expect(fetchMock.mock.calls.filter(([input]) => String(input).endsWith('/apiaries'))).toHaveLength(0)
+
     await user.type(screen.getByLabelText('Nome'), apiary.name)
     await user.type(screen.getByLabelText('Localização'), apiary.location)
     await user.type(screen.getByLabelText('Latitude'), '-23.550520')

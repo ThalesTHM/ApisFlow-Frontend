@@ -44,6 +44,26 @@ describe('authentication flow', () => {
     }))
   })
 
+  it('registers a cooperative and starts an authenticated session', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation((input) => Promise.resolve(jsonResponse(String(input).endsWith('/auth/register') ? session : [])))
+    const user = userEvent.setup()
+    renderApp('/register')
+
+    await user.type(screen.getByLabelText('Cooperativa'), 'Cooperativa Norte')
+    await user.type(screen.getByLabelText('Identificador'), 'cooperativa-norte')
+    await user.type(screen.getByLabelText('Seu nome'), 'Ana Admin')
+    await user.type(screen.getByLabelText('E-mail'), 'ana@example.com')
+    await user.type(screen.getByLabelText('Senha'), 'password123')
+    await user.click(screen.getByRole('button', { name: 'Criar cooperativa' }))
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeVisible()
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY) ?? '{}')).toEqual(session)
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/api/v1/auth/register', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ tenantName: 'Cooperativa Norte', tenantSlug: 'cooperativa-norte', name: 'Ana Admin', email: 'ana@example.com', password: 'password123' }),
+    }))
+  })
+
   it('shows a safe session message for an invalid login', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ statusCode: 401, error: 'Unauthorized', message: 'Invalid credentials', path: '/auth/login', timestamp: '2026-08-30T10:00:00.000Z' }, 401))
     const user = userEvent.setup()
