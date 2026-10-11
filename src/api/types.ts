@@ -42,7 +42,7 @@ export interface OrderItem {
   }
 }
 export interface Order {
-  id: string; tenantId: string; customerName: string; customerDocument: string
+  id: string; tenantId: string; customerName: string; customerPhone: string | null
   status: OrderStatus; total: string; createdAt: string; items?: OrderItem[]
 }
 
@@ -69,6 +69,6 @@ export interface HoneyBatchRequest {
   quality: HoneyQuality; status?: HoneyBatchStatus
 }
 export interface CreateOrderRequest {
-  customerName: string; customerDocument: string
+  customerName: string; customerPhone?: string
   items: Array<{ honeyBatchId: string; quantityKg: number; unitPrice: number }>
 }

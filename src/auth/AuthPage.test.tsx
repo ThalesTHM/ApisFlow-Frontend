@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -14,7 +15,8 @@ const session: AuthResponse = {
 }
 
 function renderApp(path = '/login') {
-  return render(<MemoryRouter initialEntries={[path]}><AuthProvider><AppRoutes /></AuthProvider></MemoryRouter>)
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[path]}><AuthProvider><AppRoutes /></AuthProvider></MemoryRouter></QueryClientProvider>)
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -25,7 +27,7 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('authentication flow', () => {
   it('logs in successfully and persists the documented session', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse(session))
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation((input) => Promise.resolve(jsonResponse(String(input).endsWith('/auth/login') ? session : [])))
     const user = userEvent.setup()
     renderApp()
 
@@ -42,7 +44,27 @@ describe('authentication flow', () => {
     }))
   })
 
-  it('shows the backend message for an invalid login', async () => {
+  it('registers a cooperative and starts an authenticated session', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation((input) => Promise.resolve(jsonResponse(String(input).endsWith('/auth/register') ? session : [])))
+    const user = userEvent.setup()
+    renderApp('/register')
+
+    await user.type(screen.getByLabelText('Cooperativa'), 'Cooperativa Norte')
+    await user.type(screen.getByLabelText('Identificador'), 'cooperativa-norte')
+    await user.type(screen.getByLabelText('Seu nome'), 'Ana Admin')
+    await user.type(screen.getByLabelText('E-mail'), 'ana@example.com')
+    await user.type(screen.getByLabelText('Senha'), 'password123')
+    await user.click(screen.getByRole('button', { name: 'Criar cooperativa' }))
+
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeVisible()
+    expect(JSON.parse(localStorage.getItem(SESSION_KEY) ?? '{}')).toEqual(session)
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3000/api/v1/auth/register', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ tenantName: 'Cooperativa Norte', tenantSlug: 'cooperativa-norte', name: 'Ana Admin', email: 'ana@example.com', password: 'password123' }),
+    }))
+  })
+
+  it('shows a safe session message for an invalid login', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ statusCode: 401, error: 'Unauthorized', message: 'Invalid credentials', path: '/auth/login', timestamp: '2026-08-30T10:00:00.000Z' }, 401))
     const user = userEvent.setup()
     renderApp()
@@ -52,13 +74,13 @@ describe('authentication flow', () => {
     await user.type(screen.getByLabelText('Senha'), 'incorrect')
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
 
-    expect(await screen.findByText('Invalid credentials')).toBeVisible()
+    expect(await screen.findByText('Sua sessão expirou. Entre novamente.')).toBeVisible()
     expect(localStorage.getItem(SESSION_KEY)).toBeNull()
   })
 
   it('logs out and clears the persisted session', async () => {
     localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse(session.user))
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) => Promise.resolve(jsonResponse(String(input).endsWith('/auth/me') ? session.user : [])))
     const user = userEvent.setup()
     renderApp('/')
 
@@ -86,6 +108,7 @@ describe('authentication flow', () => {
 
     await act(async () => resolveRequest(jsonResponse({ statusCode: 401, error: 'Unauthorized', message: 'Unauthorized', path: '/auth/me', timestamp: '2026-08-30T10:00:00.000Z' }, 401)))
     expect(await screen.findByRole('heading', { name: 'Bem-vindo de volta' })).toBeVisible()
+    expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')
     expect(localStorage.getItem(SESSION_KEY)).toBeNull()
   })
 

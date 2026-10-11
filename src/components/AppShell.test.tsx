@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -15,8 +16,9 @@ function sessionFor(role: UserRole): AuthResponse {
 function renderShell(role: UserRole, path = '/') {
   const session = sessionFor(role)
   localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify(session.user), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-  return render(<MemoryRouter initialEntries={[path]}><AuthProvider><AppRoutes /></AuthProvider></MemoryRouter>)
+  vi.spyOn(globalThis, 'fetch').mockImplementation((input) => Promise.resolve(new Response(JSON.stringify(String(input).endsWith('/auth/me') ? session.user : []), { status: 200, headers: { 'Content-Type': 'application/json' } })))
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[path]}><AuthProvider><AppRoutes /></AuthProvider></MemoryRouter></QueryClientProvider>)
 }
 
 describe('application shell authorization', () => {

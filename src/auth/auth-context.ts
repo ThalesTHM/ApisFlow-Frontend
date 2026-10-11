@@ -6,6 +6,7 @@ export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated'
 export interface AuthContextValue {
   session: AuthResponse | null
   status: AuthStatus
+  notice: string
   login: (values: LoginRequest) => Promise<void>
   register: (values: RegisterRequest) => Promise<void>
   logout: () => void
