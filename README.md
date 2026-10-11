@@ -1,4 +1,41 @@
-# React + TypeScript + Vite
+# Honey Manager Frontend
+
+React and TypeScript foundation for the multitenant Honey Manager administrative application.
+
+## Development
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+The frontend runs at `http://localhost:3001`. `VITE_API_URL` defaults to `http://localhost:3000/api/v1` when omitted.
+
+## Structure
+
+- `src/api`: typed HTTP client, API errors, and backend contract types
+- `src/auth`: persisted authentication state and session lifecycle
+- `src/components`: application shell and reusable UI primitives
+- `src/features`: isolated domain modules added incrementally
+- `src/routes`: public/protected route composition
+- `src/utils`: presentation formatting
+- `src/validation`: shared Zod conventions
+
+Dashboard, notification, and audit API modules are intentionally absent until matching backend contracts exist.
+
+## Quality checks
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+<!-- Original Vite scaffold notes retained below. -->
+
+## Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

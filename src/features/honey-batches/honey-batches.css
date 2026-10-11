@@ -1,0 +1,38 @@
+.stock-display {
+  display: grid;
+  gap: .35rem;
+  min-width: 150px;
+}
+
+.stock-display strong { font-size: .84rem; }
+.stock-display span { color: var(--muted); font-size: .76rem; }
+
+.stock-meter {
+  height: 6px;
+  overflow: hidden;
+  background: #e4e8e1;
+  border-radius: 3px;
+}
+
+.stock-meter > span {
+  display: block;
+  height: 100%;
+  background: #4e7b56;
+  border-radius: inherit;
+}
+
+.stock-detail { display: grid; gap: 1.4rem; }
+
+.stock-readonly {
+  display: grid;
+  gap: .2rem;
+  padding: .8rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f7f9f5;
+}
+
+.stock-readonly span,
+.stock-readonly small { color: var(--muted); }
+.stock-readonly span { font-size: .72rem; font-weight: 700; text-transform: uppercase; }
+.stock-readonly strong { font-size: 1rem; }
