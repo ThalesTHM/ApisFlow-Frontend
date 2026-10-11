@@ -11,7 +11,7 @@ const apiaries = [{ id: 'a1' }, { id: 'a2' }]
 const hives = [{ id: 'h1', colonyStatus: 'STRONG' }, { id: 'h2', colonyStatus: 'WEAK' }]
 const cycles = [{ id: 'c1', status: 'ACTIVE' }, { id: 'c2', status: 'COMPLETED' }]
 const batches = [{ id: 'b1', availableQuantityKg: '10.10', quality: 'PREMIUM', status: 'AVAILABLE' }, { id: 'b2', availableQuantityKg: '2.20', quality: 'STANDARD', status: 'BLOCKED' }]
-const orders = [{ id: 'o1', customerName: 'Cliente antigo', customerDocument: '1', status: 'PENDING', total: '10.00', createdAt: '2026-09-01T00:00:00Z' }, { id: 'o2', customerName: 'Cliente recente', customerDocument: '2', status: 'CONFIRMED', total: '20.00', createdAt: '2026-09-02T00:00:00Z' }]
+const orders = [{ id: 'o1', customerName: 'Cliente antigo', customerPhone: null, status: 'PENDING', total: '10.00', createdAt: '2026-09-01T00:00:00Z' }, { id: 'o2', customerName: 'Cliente recente', customerPhone: '+55 11 91234-5678', status: 'CONFIRMED', total: '20.00', createdAt: '2026-09-02T00:00:00Z' }]
 
 function json(body: unknown, status = 200) { return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }) }
 

@@ -14,7 +14,7 @@ const orderItemSchema = z.object({
 
 export const orderSchema = z.object({
   customerName: z.string().trim().min(2, 'Informe o nome do cliente.').max(120, 'Use no máximo 120 caracteres.'),
-  customerDocument: z.string().trim().min(3, 'Informe o documento do cliente.').max(30, 'Use no máximo 30 caracteres.'),
+  customerPhone: z.string().trim().max(30, 'Use no máximo 30 caracteres.').optional(),
   items: z.array(orderItemSchema).min(1, 'Adicione pelo menos um item.'),
 }).superRefine((values, context) => {
   const seen = new Set<string>()
@@ -33,9 +33,10 @@ export function calculateOrderTotal(items: OrderFormValues['items']): Decimal {
 }
 
 export function toCreateOrderRequest(values: OrderFormValues): CreateOrderRequest {
+  const customerPhone = values.customerPhone?.trim()
   return {
     customerName: values.customerName.trim(),
-    customerDocument: values.customerDocument.trim(),
+    ...(customerPhone ? { customerPhone } : {}),
     items: values.items.map((item) => ({ honeyBatchId: item.honeyBatchId, quantityKg: new Decimal(item.quantityKg).toNumber(), unitPrice: new Decimal(item.unitPrice).toNumber() })),
   }
 }

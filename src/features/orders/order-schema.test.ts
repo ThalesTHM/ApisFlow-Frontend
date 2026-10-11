@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { allowedOrderTransitions, calculateOrderTotal, orderSchema, toCreateOrderRequest } from './order-schema'
 
-const values = { customerName: 'Mercado Central', customerDocument: '12.345.678/0001-90', items: [{ honeyBatchId: '44e584fc-05e7-4fd9-a0a4-912506ace129', quantityKg: '2.35', unitPrice: '19.90' }] }
+const values = { customerName: 'Mercado Central', customerPhone: '+55 11 91234-5678', items: [{ honeyBatchId: '44e584fc-05e7-4fd9-a0a4-912506ace129', quantityKg: '2.35', unitPrice: '19.90' }] }
 
 describe('Order validation', () => {
   it('calculates totals with Decimal and converts only at the API boundary', () => {
     expect(calculateOrderTotal(values.items).toFixed(2)).toBe('46.77')
     expect(toCreateOrderRequest(values)).toEqual({ ...values, items: [{ ...values.items[0], quantityKg: 2.35, unitPrice: 19.9 }] })
+  })
+
+  it('omits an empty optional customer phone from the request', () => {
+    expect(orderSchema.safeParse({ ...values, customerPhone: '' }).success).toBe(true)
+    expect(toCreateOrderRequest({ ...values, customerPhone: '   ' })).not.toHaveProperty('customerPhone')
   })
 
   it('rejects the same batch twice', () => {

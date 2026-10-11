@@ -9,9 +9,9 @@ import { HoneyBatchCreatePage, HoneyBatchDetailPage, HoneyBatchEditPage, HoneyBa
 import { HiveCreatePage, HiveDetailPage, HiveEditPage, HiveListPage } from '../features/hives/HivePages'
 import { OrderCreatePage, OrderDetailPage, OrderListPage } from '../features/orders/OrderPages.tsx'
 import { ProductionCycleCreatePage, ProductionCycleDetailPage, ProductionCycleEditPage, ProductionCycleListPage } from '../features/production-cycles/ProductionCyclePages.tsx'
+import { UserCreatePage, UserDetailPage, UserEditPage, UserListPage } from '../features/users/UserPages'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PermissionRoute } from './PermissionRoute'
-import { RoutePlaceholder } from './RoutePlaceholder'
 import { ForbiddenPage } from './ForbiddenPage'
 
 function ProtectedLayout() { return <AppShell><Outlet /></AppShell> }
@@ -54,7 +54,14 @@ export function AppRoutes() {
             <Route path="/orders/:id" element={<OrderDetailPage />} />
             <Route element={<PermissionRoute permission="operations:write" />}><Route path="/orders/new" element={<OrderCreatePage />} /></Route>
           </Route>
-          <Route element={<PermissionRoute permission="users:read" />}><Route path="/users" element={<RoutePlaceholder title="Usuários" />} /></Route>
+          <Route element={<PermissionRoute permission="users:read" />}>
+            <Route path="/users" element={<UserListPage />} />
+            <Route path="/users/:id" element={<UserDetailPage />} />
+            <Route element={<PermissionRoute permission="users:write" />}>
+              <Route path="/users/new" element={<UserCreatePage />} />
+              <Route path="/users/:id/edit" element={<UserEditPage />} />
+            </Route>
+          </Route>
           <Route path="/forbidden" element={<ForbiddenPage />} />
         </Route>
       </Route>

@@ -10,7 +10,7 @@ import { AuthProvider } from '../../auth/AuthContext'
 
 const cycle: ProductionCycle = { id: '74ed7043-1d1f-47f0-a428-cf1eb26a82e4', tenantId: 'tenant-1', hiveId: '67c4e50e-ae02-45f4-9dd3-e266375b3799', startDate: '2026-09-01T00:00:00.000Z', endDate: null, status: 'ACTIVE', estimatedProductionKg: '100.50', actualProductionKg: null, notes: null }
 const batch: HoneyBatch = { id: '44e584fc-05e7-4fd9-a0a4-912506ace129', tenantId: 'tenant-1', productionCycleId: cycle.id, code: 'LOTE-001', productionDate: '2026-09-02T00:00:00.000Z', quantityKg: '100.50', availableQuantityKg: '65.25', quality: 'PREMIUM', status: 'AVAILABLE' }
-const order: Order = { id: '05435cec-d9c1-46d9-aa8c-da45e12b6b1a', tenantId: 'tenant-1', customerName: 'Mercado Central', customerDocument: '12.345.678/0001-90', status: 'PENDING', total: '46.77', createdAt: '2026-09-02T15:00:00.000Z', items: [{ id: 'item-1', tenantId: 'tenant-1', orderId: '05435cec-d9c1-46d9-aa8c-da45e12b6b1a', honeyBatchId: batch.id, quantityKg: '2.35', unitPrice: '19.90', subtotal: '46.77', honeyBatch: { ...batch, productionCycle: { ...cycle, hive: { id: cycle.hiveId, tenantId: 'tenant-1', apiaryId: 'apiary-1', code: 'HIVE-001', queenStatus: 'PRESENT', colonyStatus: 'STRONG', installationDate: cycle.startDate, notes: null, createdAt: cycle.startDate, updatedAt: cycle.startDate } } } }] }
+const order: Order = { id: '05435cec-d9c1-46d9-aa8c-da45e12b6b1a', tenantId: 'tenant-1', customerName: 'Mercado Central', customerPhone: '+55 11 91234-5678', status: 'PENDING', total: '46.77', createdAt: '2026-09-02T15:00:00.000Z', items: [{ id: 'item-1', tenantId: 'tenant-1', orderId: '05435cec-d9c1-46d9-aa8c-da45e12b6b1a', honeyBatchId: batch.id, quantityKg: '2.35', unitPrice: '19.90', subtotal: '46.77', honeyBatch: { ...batch, productionCycle: { ...cycle, hive: { id: cycle.hiveId, tenantId: 'tenant-1', apiaryId: 'apiary-1', code: 'HIVE-001', queenStatus: 'PRESENT', colonyStatus: 'STRONG', installationDate: cycle.startDate, notes: null, createdAt: cycle.startDate, updatedAt: cycle.startDate } } } }] }
 
 function json(body: unknown, status = 200) { return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }) }
 
@@ -39,7 +39,7 @@ describe('Order management', () => {
       throw new Error(`Unexpected request: ${init?.method ?? 'GET'} ${url}`)
     })
     await user.type(await screen.findByLabelText('Nome do cliente'), order.customerName)
-    await user.type(screen.getByLabelText('Documento'), order.customerDocument)
+    await user.type(screen.getByLabelText('Telefone'), order.customerPhone!)
     await user.selectOptions(screen.getByLabelText('Lote de mel'), batch.id)
     await user.type(screen.getByLabelText('Quantidade (kg)'), '2.35')
     await user.type(screen.getByLabelText('Preço unitário'), '19.90')
@@ -47,7 +47,7 @@ describe('Order management', () => {
     expect(within(summary).getByText(/46,77/)).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Criar pedido' }))
     expect(await screen.findByRole('heading', { name: order.customerName })).toBeVisible()
-    expect(requestBody).toEqual({ customerName: order.customerName, customerDocument: order.customerDocument, items: [{ honeyBatchId: batch.id, quantityKg: 2.35, unitPrice: 19.9 }] })
+    expect(requestBody).toEqual({ customerName: order.customerName, customerPhone: order.customerPhone, items: [{ honeyBatchId: batch.id, quantityKg: 2.35, unitPrice: 19.9 }] })
     expect(requestBody).not.toHaveProperty('total')
   })
 
@@ -56,7 +56,7 @@ describe('Order management', () => {
     const { fetchMock } = renderApp('/orders/new', 'ADMIN', async (url) => url.endsWith('/honey-batches') ? json([batch]) : json(order, 201))
     await screen.findByLabelText('Nome do cliente')
     await user.type(screen.getByLabelText('Nome do cliente'), order.customerName)
-    await user.type(screen.getByLabelText('Documento'), order.customerDocument)
+    await user.type(screen.getByLabelText('Telefone'), order.customerPhone!)
     await user.selectOptions(screen.getByLabelText('Lote de mel'), batch.id)
     await user.type(screen.getByLabelText('Quantidade (kg)'), '1.00')
     await user.type(screen.getByLabelText('Preço unitário'), '10.00')
