@@ -1,6 +1,14 @@
 import type { ApiErrorBody } from './types'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
+declare global {
+  interface Window {
+    __APP_CONFIG__?: { apiUrl?: string }
+  }
+}
+
+// Ordem: configuração do container (config.js) > VITE_API_URL > padrão local
+const API_URL =
+  window.__APP_CONFIG__?.apiUrl ?? import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
 const SESSION_KEY = 'honey-manager.session'
 
 let onUnauthorized: (() => void) | undefined
