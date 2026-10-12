@@ -14,8 +14,8 @@ const SESSION_KEY = 'honey-manager.session'
 let onUnauthorized: (() => void) | undefined
 
 export class ApiError extends Error {
-  constructor(public readonly status: number, public readonly details?: ApiErrorBody) {
-    super(friendlyStatus(status))
+  constructor(public readonly status: number, public readonly details?: ApiErrorBody, message?: string) {
+    super(message ?? friendlyStatus(status))
     this.name = 'ApiError'
   }
 }
@@ -41,6 +41,10 @@ function token() {
   }
 }
 
+function isCredentialRequest(path: string) {
+  return path === '/auth/login' || path === '/auth/register'
+}
+
 export function setUnauthorizedHandler(handler: (() => void) | undefined) {
   onUnauthorized = handler
 }
@@ -64,6 +68,10 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   if (!response.ok) {
     let details: ApiErrorBody | undefined
     try { details = await response.json() as ApiErrorBody } catch { /* Empty or non-JSON error. */ }
+    // No login/cadastro, 401 significa credenciais erradas, não sessão expirada.
+    if (response.status === 401 && isCredentialRequest(path)) {
+      throw new ApiError(401, details, 'Organização, e-mail ou senha incorretos.')
+    }
     if (response.status === 401) onUnauthorized?.()
     throw new ApiError(response.status, details)
   }

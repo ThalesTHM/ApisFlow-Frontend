@@ -64,7 +64,7 @@ describe('authentication flow', () => {
     }))
   })
 
-  it('shows a safe session message for an invalid login', async () => {
+  it('shows an invalid credentials message for a rejected login', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ statusCode: 401, error: 'Unauthorized', message: 'Invalid credentials', path: '/auth/login', timestamp: '2026-08-30T10:00:00.000Z' }, 401))
     const user = userEvent.setup()
     renderApp()
@@ -74,7 +74,8 @@ describe('authentication flow', () => {
     await user.type(screen.getByLabelText('Senha'), 'incorrect')
     await user.click(screen.getByRole('button', { name: 'Entrar' }))
 
-    expect(await screen.findByText('Sua sessão expirou. Entre novamente.')).toBeVisible()
+    expect(await screen.findByText('Organização, e-mail ou senha incorretos.')).toBeVisible()
+    expect(screen.queryByText('Sua sessão expirou. Entre novamente.')).not.toBeInTheDocument()
     expect(localStorage.getItem(SESSION_KEY)).toBeNull()
   })
 
