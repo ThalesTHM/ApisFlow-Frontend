@@ -1,11 +1,11 @@
-import { Toaster } from 'sonner'
+import { NotificationHost } from './components/NotificationHost'
 import { AppRoutes } from './routes/AppRoutes'
 
 export default function App() {
   return (
     <>
       <AppRoutes />
-      <Toaster position="top-right" richColors closeButton />
+      <NotificationHost />
     </>
   )
 }

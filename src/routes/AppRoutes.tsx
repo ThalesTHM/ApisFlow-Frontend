@@ -1,35 +1,71 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
-import { AuthPage } from '../auth/AuthPage'
+import { LoginPage, RegisterPage } from '../auth/AuthPage'
 import { AppShell } from '../components/AppShell'
-import { ApiariesPage } from '../features/apiaries/ApiariesPage'
-import { DashboardPage } from '../features/dashboard/DashboardPage'
-import { HivesPage } from '../features/hives/HivesPage'
-import { HoneyBatchesPage } from '../features/honey-batches/HoneyBatchesPage'
-import { OrdersPage } from '../features/orders/OrdersPage'
-import { ProductionCyclesPage } from '../features/production-cycles/ProductionCyclesPage'
-import { UsersPage } from '../features/users/UsersPage'
+import { Spinner } from '../components/ui'
+import { ApiaryCreatePage, ApiaryDetailPage, ApiaryEditPage, ApiaryListPage } from '../features/apiaries/ApiaryPages'
+import { DashboardPage } from '../features/dashboard/DashboardPage.tsx'
+import { HoneyBatchCreatePage, HoneyBatchDetailPage, HoneyBatchEditPage, HoneyBatchListPage } from '../features/honey-batches/HoneyBatchPages.tsx'
+import { HiveCreatePage, HiveDetailPage, HiveEditPage, HiveListPage } from '../features/hives/HivePages'
+import { OrderCreatePage, OrderDetailPage, OrderListPage } from '../features/orders/OrderPages.tsx'
+import { ProductionCycleCreatePage, ProductionCycleDetailPage, ProductionCycleEditPage, ProductionCycleListPage } from '../features/production-cycles/ProductionCyclePages.tsx'
+import { UserCreatePage, UserDetailPage, UserEditPage, UserListPage } from '../features/users/UserPages'
 import { ProtectedRoute } from './ProtectedRoute'
+import { PermissionRoute } from './PermissionRoute'
+import { ForbiddenPage } from './ForbiddenPage'
 
 function ProtectedLayout() { return <AppShell><Outlet /></AppShell> }
 
 export function AppRoutes() {
-  const { session } = useAuth()
+  const { status } = useAuth()
   return (
     <Routes>
-      <Route path="/login" element={session ? <Navigate to="/" replace /> : <AuthPage />} />
+      <Route path="/login" element={status === 'loading' ? <main className="page"><Spinner label="Validando sessão" /></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/register" element={status === 'loading' ? <main className="page"><Spinner label="Validando sessão" /></main> : status === 'authenticated' ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<ProtectedLayout />}>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/apiaries" element={<ApiariesPage />} />
-          <Route path="/hives" element={<HivesPage />} />
-          <Route path="/production-cycles" element={<ProductionCyclesPage />} />
-          <Route path="/honey-batches" element={<HoneyBatchesPage />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/users" element={<UsersPage />} />
+          <Route element={<PermissionRoute permission="dashboard:read" />}><Route path="/" element={<DashboardPage />} /></Route>
+          <Route element={<PermissionRoute permission="operations:read" />}>
+            <Route path="/apiaries" element={<ApiaryListPage />} />
+            <Route path="/apiaries/:id" element={<ApiaryDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}>
+              <Route path="/apiaries/new" element={<ApiaryCreatePage />} />
+              <Route path="/apiaries/:id/edit" element={<ApiaryEditPage />} />
+            </Route>
+            <Route path="/hives" element={<HiveListPage />} />
+            <Route path="/hives/:id" element={<HiveDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}>
+              <Route path="/hives/new" element={<HiveCreatePage />} />
+              <Route path="/hives/:id/edit" element={<HiveEditPage />} />
+            </Route>
+            <Route path="/production-cycles" element={<ProductionCycleListPage />} />
+            <Route path="/production-cycles/:id" element={<ProductionCycleDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}>
+              <Route path="/production-cycles/new" element={<ProductionCycleCreatePage />} />
+              <Route path="/production-cycles/:id/edit" element={<ProductionCycleEditPage />} />
+            </Route>
+            <Route path="/honey-batches" element={<HoneyBatchListPage />} />
+            <Route path="/honey-batches/:id" element={<HoneyBatchDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}>
+              <Route path="/honey-batches/new" element={<HoneyBatchCreatePage />} />
+              <Route path="/honey-batches/:id/edit" element={<HoneyBatchEditPage />} />
+            </Route>
+            <Route path="/orders" element={<OrderListPage />} />
+            <Route path="/orders/:id" element={<OrderDetailPage />} />
+            <Route element={<PermissionRoute permission="operations:write" />}><Route path="/orders/new" element={<OrderCreatePage />} /></Route>
+          </Route>
+          <Route element={<PermissionRoute permission="users:read" />}>
+            <Route path="/users" element={<UserListPage />} />
+            <Route path="/users/:id" element={<UserDetailPage />} />
+            <Route element={<PermissionRoute permission="users:write" />}>
+              <Route path="/users/new" element={<UserCreatePage />} />
+              <Route path="/users/:id/edit" element={<UserEditPage />} />
+            </Route>
+          </Route>
+          <Route path="/forbidden" element={<ForbiddenPage />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />
+      <Route path="*" element={<Navigate to={status === 'authenticated' ? '/' : '/login'} replace />} />
     </Routes>
   )
 }

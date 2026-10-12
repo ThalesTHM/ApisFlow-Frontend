@@ -1,25 +1,33 @@
 import type { ApiErrorBody } from './types'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
+declare global {
+  interface Window {
+    __APP_CONFIG__?: { apiUrl?: string }
+  }
+}
+
+// Ordem: configuração do container (config.js) > VITE_API_URL > padrão local
+const API_URL =
+  window.__APP_CONFIG__?.apiUrl ?? import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
 const SESSION_KEY = 'honey-manager.session'
 
 let onUnauthorized: (() => void) | undefined
 
 export class ApiError extends Error {
-  constructor(public readonly status: number, public readonly details?: ApiErrorBody) {
-    const messages = details?.message
-    super(Array.isArray(messages) ? messages.join(' ') : messages || friendlyStatus(status))
+  constructor(public readonly status: number, public readonly details?: ApiErrorBody, message?: string) {
+    super(message ?? friendlyStatus(status))
     this.name = 'ApiError'
   }
 }
 
 function friendlyStatus(status: number) {
   const messages: Record<number, string> = {
-    400: 'Revise os dados informados.',
+    0: 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.',
+    400: 'Não foi possível concluir. Revise os dados informados.',
     401: 'Sua sessão expirou. Entre novamente.',
     403: 'Você não tem permissão para esta ação.',
     404: 'O registro solicitado não foi encontrado.',
-    409: 'A operação conflita com os dados atuais.',
+    409: 'Não foi possível concluir porque os dados entram em conflito com o estado atual.',
   }
   return messages[status] ?? 'Não foi possível concluir a operação.'
 }
@@ -31,6 +39,10 @@ function token() {
     localStorage.removeItem(SESSION_KEY)
     return undefined
   }
+}
+
+function isCredentialRequest(path: string) {
+  return path === '/auth/login' || path === '/auth/register'
 }
 
 export function setUnauthorizedHandler(handler: (() => void) | undefined) {
@@ -56,6 +68,10 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   if (!response.ok) {
     let details: ApiErrorBody | undefined
     try { details = await response.json() as ApiErrorBody } catch { /* Empty or non-JSON error. */ }
+    // No login/cadastro, 401 significa credenciais erradas, não sessão expirada.
+    if (response.status === 401 && isCredentialRequest(path)) {
+      throw new ApiError(401, details, 'Organização, e-mail ou senha incorretos.')
+    }
     if (response.status === 401) onUnauthorized?.()
     throw new ApiError(response.status, details)
   }

@@ -1,12 +1,43 @@
 import { LoaderCircle, X } from 'lucide-react'
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { forwardRef, useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type KeyboardEvent, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
+import { ApiError } from '../api/client'
 
 export function Button({ className = '', variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' }) {
   return <button className={`button button--${variant} ${className}`} {...props} />
 }
 
+export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string }>(function Input({ label, error, id, ...props }, ref) {
+  const generatedId = useId()
+  const inputId = id ?? generatedId
+  return <div className="field"><label htmlFor={inputId}>{label}</label><input ref={ref} id={inputId} {...props} aria-invalid={Boolean(error)} aria-describedby={error ? `${inputId}-error` : undefined} />{error && <small id={`${inputId}-error`} role="alert">{error}</small>}</div>
+})
+
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string }>(function Textarea({ label, error, id, ...props }, ref) {
+  const generatedId = useId()
+  const textareaId = id ?? generatedId
+  return <div className="field field--wide"><label htmlFor={textareaId}>{label}</label><textarea ref={ref} id={textareaId} {...props} aria-invalid={Boolean(error)} aria-describedby={error ? `${textareaId}-error` : undefined} />{error && <small id={`${textareaId}-error`} role="alert">{error}</small>}</div>
+})
+
+export interface SelectOption { value: string; label: string }
+
+export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & { label: string; error?: string; options: SelectOption[]; placeholder?: string }>(function Select({ label, error, options, placeholder = 'Selecione', id, ...props }, ref) {
+  const generatedId = useId()
+  const selectId = id ?? generatedId
+  return <div className="field"><label htmlFor={selectId}>{label}</label><select ref={ref} id={selectId} {...props} aria-invalid={Boolean(error)} aria-describedby={error ? `${selectId}-error` : undefined}><option value="">{placeholder}</option>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>{error && <small id={`${selectId}-error`} role="alert">{error}</small>}</div>
+})
+
+export interface TableColumn<T> { key: string; header: ReactNode; render: (row: T) => ReactNode }
+
+export function Table<T>({ columns, rows, getRowKey, caption }: { columns: TableColumn<T>[]; rows: T[]; getRowKey: (row: T) => string; caption?: string }) {
+  return <div className="table-wrap"><table>{caption && <caption className="sr-only">{caption}</caption>}<thead><tr>{columns.map((column) => <th key={column.key}>{column.header}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={getRowKey(row)}>{columns.map((column) => <td key={column.key}>{column.render(row)}</td>)}</tr>)}</tbody></table></div>
+}
+
 export function Spinner({ label = 'Carregando' }: { label?: string }) {
   return <div className="state-message" role="status"><LoaderCircle className="spin" size={22} /><span>{label}</span></div>
+}
+
+export function TableSkeleton({ label = 'Carregando dados', rows = 4, columns = 5 }: { label?: string; rows?: number; columns?: number }) {
+  return <div className="table-skeleton" role="status" aria-label={label} style={{ '--skeleton-columns': columns } as React.CSSProperties}><span className="sr-only">{label}</span>{Array.from({ length: rows }, (_, row) => <div className="table-skeleton__row" key={row}>{Array.from({ length: columns }, (_, column) => <span key={column} />)}</div>)}</div>
 }
 
 export function EmptyState({ title, description }: { title: string; description: string }) {
@@ -15,22 +46,43 @@ export function EmptyState({ title, description }: { title: string; description:
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const message = error instanceof Error ? error.message : 'Não foi possível carregar os dados.'
-  return <div className="error-state" role="alert"><strong>Algo deu errado</strong><p>{message}</p>{onRetry && <Button variant="secondary" onClick={onRetry}>Tentar novamente</Button>}</div>
+  const title = error instanceof ApiError ? ({ 403: 'Acesso não permitido', 404: 'Registro não encontrado', 409: 'Conflito de dados' }[error.status] ?? 'Não foi possível carregar') : 'Não foi possível carregar'
+  return <div className="error-state" role="alert"><strong>{title}</strong><p>{message}</p>{onRetry && <Button variant="secondary" onClick={onRetry}>Tentar novamente</Button>}</div>
 }
 
-export function Badge({ value }: { value: string }) {
-  return <span className={`badge badge--${value.toLowerCase()}`}>{value.replaceAll('_', ' ')}</span>
+export function Badge({ value, label }: { value: string; label?: string }) {
+  return <span className={`badge badge--${value.toLowerCase()}`}>{label ?? value.replaceAll('_', ' ')}</span>
 }
 
-export function Modal({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-    <section className={`modal ${wide ? 'modal--wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <header><h2 id="modal-title">{title}</h2><button className="icon-button" onClick={onClose} aria-label="Fechar"><X size={19} /></button></header>
+export function Dialog({ title, children, onClose, wide = false, dismissible = true }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean; dismissible?: boolean }) {
+  const titleId = useId()
+  const dialogRef = useRef<HTMLElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    closeRef.current?.focus()
+    return () => previousFocus?.focus()
+  }, [])
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Escape' && dismissible) { event.preventDefault(); onClose(); return }
+    if (event.key !== 'Tab') return
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])') ?? [])
+    if (!focusable.length) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+  }
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && dismissible && onClose()}>
+    <section ref={dialogRef} className={`modal ${wide ? 'modal--wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={handleKeyDown}>
+      <header><h2 id={titleId}>{title}</h2><button ref={closeRef} type="button" className="icon-button" disabled={!dismissible} onClick={onClose} aria-label="Fechar"><X size={19} /></button></header>
       {children}
     </section>
   </div>
 }
 
+export const Modal = Dialog
+
 export function ConfirmDialog({ title, description, busy, onConfirm, onClose }: { title: string; description: string; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
-  return <Modal title={title} onClose={onClose}><p className="dialog-copy">{description}</p><footer className="form-actions"><Button variant="secondary" onClick={onClose}>Cancelar</Button><Button variant="danger" disabled={busy} onClick={onConfirm}>{busy ? 'Excluindo…' : 'Excluir'}</Button></footer></Modal>
+  return <Dialog title={title} onClose={onClose} dismissible={!busy}><p className="dialog-copy">{description}</p><footer className="form-actions"><Button variant="secondary" disabled={busy} onClick={onClose}>Cancelar</Button><Button variant="danger" disabled={busy} onClick={onConfirm}>{busy ? 'Processando…' : 'Confirmar'}</Button></footer></Dialog>
 }
