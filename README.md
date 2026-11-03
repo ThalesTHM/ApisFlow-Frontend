@@ -1,6 +1,6 @@
-# Honey Manager Frontend
+# ApisFlow Frontend
 
-React and TypeScript foundation for the multitenant Honey Manager administrative application.
+React and TypeScript foundation for the multitenant ApisFlow administrative application.
 
 ## Development
 
